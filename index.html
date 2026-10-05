@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Simulador de vigencias futuras · SGR</title>
+<link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#14213d;--mut:#5b6577;--bg:#f4f5f8;--card:#fff;--line:#d9dde5;--teal:#0f766e;--ochre:#b7791f;--red:#b42318;--green:#177245}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "Public Sans",system-ui,sans-serif}
+header{background:var(--ink);color:#fff;padding:22px 28px}
+header h1{margin:0;font-size:22px}header p{margin:4px 0 0;color:#b9c3d9;font-size:13px}
+main{display:grid;grid-template-columns:330px 1fr;gap:20px;padding:20px 28px;max-width:1280px;margin:auto}
+@media(max-width:900px){main{grid-template-columns:1fr;padding:14px}}
+section,aside{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px}
+h2{font-size:16px;margin:0 0 10px}h3{font-size:14px;margin:14px 0 6px}
+.col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.sl{margin:12px 0}.sl label{display:flex;justify-content:space-between;font-size:13px;font-weight:600}
+.sl .r{display:flex;gap:8px;align-items:center}.sl input[type=range]{flex:1;accent-color:var(--teal)}
+.sl input[type=number]{width:68px}
+.sl.off{opacity:.4}
+input,select,button{font:inherit;color:inherit}
+input[type=number],input[type=text],select{border:1px solid var(--line);border-radius:5px;padding:5px 7px;background:#fff}
+button{border:1px solid var(--ink);background:#fff;border-radius:5px;padding:6px 11px;cursor:pointer;font-weight:600}
+button.p{background:var(--ink);color:#fff}button:hover{background:#e9edf5}button.p:hover{background:#26365c}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--teal);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.seg label{display:flex;gap:6px;align-items:center;font-weight:400;margin-right:12px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.k{border:1px solid var(--line);border-radius:8px;padding:12px}
+.k b{display:block;font-size:24px;font-variant-numeric:tabular-nums}.k span{font-size:12px;color:var(--mut)}
+.d{font-size:12px;font-variant-numeric:tabular-nums}.up{color:var(--green)}.dn{color:var(--red)}
+.al{background:#fdecea;border-left:4px solid var(--red);padding:8px 12px;margin:10px 0;border-radius:4px;font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}
+th,td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:right}
+th:first-child,td:first-child{text-align:left}th{font-size:12px;color:var(--mut);font-weight:600}
+.scroll{overflow-x:auto}.neg{color:var(--red);font-weight:600}
+.lg{display:flex;gap:14px;font-size:12px;color:var(--mut);margin:4px 0}.lg i{display:inline-block;width:10px;height:10px;margin-right:5px;border-radius:2px}
+svg{width:100%;height:auto}svg text{font-size:12px;fill:var(--mut)}
+.slots{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:700px){.slots{grid-template-columns:1fr}}
+.sc{border:1px dashed var(--line);border-radius:8px;padding:12px;font-size:13px}.sc.f{border-style:solid}
+.note{font-size:12px;color:var(--mut)}
+#us td input[type=text]{width:100%}#us td input[type=number]{width:90px}
+</style>
+</head>
+<body>
+<header>
+<h1>Simulador de vigencias futuras · bienios 2027-2036</h1>
+<p>Cifras en miles de millones de pesos (MM). Mueva los porcentajes y vea cuánto queda para otros proyectos.</p>
+</header>
+<main>
+<aside class="col">
+<div>
+<h2>Parámetros</h2>
+<div class="seg"><b style="font-size:13px">Primera vigencia futura en</b>
+<div class="row" id="st"></div>
+<p class="note" id="stn"></p></div>
+<div id="ctl"></div>
+<div class="row"><button data-pre="base">Base (Excel)</button><button data-pre="max">Máximos</button><button data-pre="seg">Desde 2029</button></div>
+<p class="note">Máximo 4 bienios: 2027-2034 si inicia en 2027, o 2029-2036 si inicia en 2029.</p>
+</div>
+<div>
+<h2>Usos identificados</h2>
+<table id="us"></table>
+<button id="addu" style="margin-top:8px">Agregar uso</button>
+<p class="note">Lo que no se asigne queda para el Tren multipropósito.</p>
+</div>
+</aside>
+<div class="col">
+<section><h2>Resultado de la proyección actual</h2><div id="out"></div></section>
+<section>
+<h2>Proyecciones guardadas</h2>
+<div class="row" style="margin-bottom:12px">
+<input type="text" id="nm" placeholder="Nombre de la proyección" aria-label="Nombre de la proyección" style="flex:1;min-width:180px">
+<button class="p" id="sA">Guardar en A</button><button class="p" id="sB">Guardar en B</button>
+</div>
+<div class="slots" id="slots"></div>
+<div id="cmp"></div>
+<p class="note">Se guardan en este navegador. Para compartirlas, publique la página y use el mismo equipo o navegador.</p>
+</section>
+</div>
+</main>
+<script>
+const Y=[...Array(10)].map((_,i)=>2027+i);
+const D={
+ad:[27214935426,27104903230,25369105269,24352360012,29180028928,27587922782,18645011187,30749162137,29797403759,32437079529],
+a60:[104241500773,107746388906,109501900663,110364353008,111907393419,104100366876,76848465269,71669174941,68716251360,67258873105],
+a40:[148690660224,153535789983,155889075670,156976344315,159033720409,147814801545,109029219834,101598338695,97333192323,95191194896]};
+const FX={A:21771069000+85020219000,B:71164642271.498+88309215349.6+22019564682};
+const BASE={start:2027,p1:25,p:50,q1:100/6,q:36,usos:[{n:'Escenarios deportivos',f:'A',v:149320864415},{n:'Hostería - centro deportivo',f:'A',v:2e11}]};
+const SL=[['p1','AD y AIR 60 · bienio 2027-2028',60],['p','AD y AIR 60 · demás bienios',50],['q1','AIR 40 (OCAD) · bienio 2027-2028',36],['q','AIR 40 (OCAD) · demás bienios',36]];
+const M=[['VF AD y AIR 60','vA'],['VF AIR 40','vB'],['VF total','vT'],['Otros proyectos 2027-28 · AD y AIR 60','oA'],['Otros proyectos 2027-28 · AIR 40','oB'],['Recursos AD y AIR 60 (con 2026)','rA'],['Recursos AIR 40 (con saldos)','rB'],['Disponible Tren multipropósito','tren']];
+const $=i=>document.getElementById(i),clone=o=>JSON.parse(JSON.stringify(o));
+const f=v=>(v/1e9).toLocaleString('es-CO',{minimumFractionDigits:1,maximumFractionDigits:1});
+const mem={},st={get:k=>{try{return localStorage.getItem(k)}catch(e){return mem[k]||null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){mem[k]=v}}};
+let s=clone(BASE),slots={A:null,B:null};
+try{slots=Object.assign(slots,JSON.parse(st.get('vf_slots')||'{}'))}catch(e){}
+
+function calc(s){
+ const si=s.start==2027?0:1,B=[];
+ for(let b=0;b<5;b++){
+  const o={yr:Y[2*b]+'-'+Y[2*b+1],on:b>=si&&b<si+4};
+  for(const [k,a1,a2] of [['ad',s.p1,s.p],['a60',s.p1,s.p],['a40',s.q1,s.q]]){
+   const a=D[k][2*b]+D[k][2*b+1];o[k]=a;o[k+'v']=o.on?a*(b==0?a1:a2)/100:0}
+  o.A=o.ad+o.a60;o.Av=o.adv+o.a60v;o.Bv=o.a40v;B.push(o)}
+ const r={B,vA:0,vB:0,uA:0,uB:0};
+ B.forEach(o=>{r.vA+=o.Av;r.vB+=o.Bv});
+ r.vT=r.vA+r.vB;
+ r.oA=.6*B[0].A-B[0].Av;r.oB=.24*B[0].a40-B[0].Bv;
+ r.rA=FX.A+r.oA;r.rB=FX.B+r.oB;
+ s.usos.forEach(u=>u.f=='A'?r.uA+=u.v:r.uB+=u.v);
+ r.tren=r.vT-r.uA-r.uB;
+ return r}
+
+function renderCtl(){
+ $('st').innerHTML=[2027,2029].map(y=>`<label><input type="radio" name="st" value="${y}" ${s.start==y?'checked':''}>${y===2027?'2027 (bienio 1)':'2029 (2.º bienio)'}</label>`).join('');
+ $('stn').textContent=s.start==2027?'Se usa vigencia futura desde el primer bienio.':'El primer bienio (2027-2028) queda sin vigencia futura.';
+ $('ctl').innerHTML=SL.map(([k,l,mx])=>{const off=s.start==2029&&(k=='p1'||k=='q1');const v=+(+s[k]).toFixed(2);
+  return `<div class="sl ${off?'off':''}"><label for="n_${k}">${l}<span>máx. ${mx}%</span></label><div class="r"><input type="range" min="0" max="${mx}" step="0.5" value="${v}" data-k="${k}" data-mx="${mx}" ${off?'disabled':''} aria-label="${l}"><input type="number" id="n_${k}" min="0" max="${mx}" step="0.01" value="${v}" data-k="${k}" data-mx="${mx}" ${off?'disabled':''}>%</div></div>`}).join('')}
+
+function renderUsos(){
+ $('us').innerHTML='<tr><th>Uso</th><th>Fuente</th><th>MM</th><th></th></tr>'+s.usos.map((u,i)=>`<tr><td><input type="text" value="${u.n.replace(/"/g,'&quot;')}" data-i="${i}" data-a="n" aria-label="Nombre del uso"></td><td><select data-i="${i}" data-a="f" aria-label="Fuente"><option value="A" ${u.f=='A'?'selected':''}>AD y AIR 60</option><option value="B" ${u.f=='B'?'selected':''}>AIR 40</option></select></td><td><input type="number" step="0.1" min="0" value="${+(u.v/1e9).toFixed(3)}" data-i="${i}" data-a="v" aria-label="Valor en MM"></td><td><button data-del="${i}" aria-label="Quitar uso">✕</button></td></tr>`).join('')}
+
+function chart(B){
+ const W=600,H=210,m=24,bw=70,g=(W-5*bw)/6,mx=Math.max(...B.map(o=>o.A+o.a40));let t='';
+ B.forEach((o,i)=>{const x=g+i*(bw+g);let y=H-m;
+  for(const [v,c] of [[o.Av,'#0f766e'],[o.Bv,'#b7791f'],[o.A+o.a40-o.Av-o.Bv,'#dfe3ea']]){const h=v/mx*(H-m-12);y-=h;t+=`<rect x="${x}" y="${y}" width="${bw}" height="${h}" fill="${c}"/>`}
+  t+=`<text x="${x+bw/2}" y="${H-8}" text-anchor="middle">${o.yr}</text>`});
+ return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Asignación por bienio y parte comprometida en vigencia futura">${t}</svg>`}
+
+function dl(v,b){const d=v-b;if(Math.abs(d)<5e6)return '<span class="d">igual a la base</span>';return `<span class="d ${d>0?'up':'dn'}">${d>0?'+':''}${f(d)} vs. base</span>`}
+
+function draw(){
+ const r=calc(s),b0=calc(BASE);let al='';
+ if(r.oA<-1e6)al+=`<div class="al">La VF de AD y AIR 60 supera el máximo de aprobación del bienio 2027-2028 en ${f(-r.oA)} MM.</div>`;
+ if(r.oB<-1e6)al+=`<div class="al">La VF de AIR 40 supera el 24% de aprobación máxima del bienio 2027-2028 en ${f(-r.oB)} MM; no queda nada para otros proyectos.</div>`;
+ if(r.tren<0)al+=`<div class="al">Los usos identificados superan las fuentes de VF en ${f(-r.tren)} MM.</div>`;
+ const kp=[['Vigencia futura total','vT'],['Otros proyectos 2027-28 · AD y AIR 60','oA'],['Otros proyectos 2027-28 · AIR 40','oB'],['Disponible Tren multipropósito','tren']];
+ const rows=r.B.map(o=>`<tr><td>${o.yr}</td><td>${f(o.A)}</td><td>${o.on?f(o.Av):'—'}</td><td>${f(o.a40)}</td><td>${o.on?f(o.Bv):'—'}</td><td>${f(o.A+o.a40-o.Av-o.Bv)}</td></tr>`).join('');
+ $('out').innerHTML=`<div class="kpis">${kp.map(([l,k])=>`<div class="k"><span>${l}</span><b class="${r[k]<0?'neg':''}">${f(r[k])}</b>${dl(r[k],b0[k])}</div>`).join('')}</div>${al}
+ <h3>VF por bienio</h3><div class="lg"><span><i style="background:#0f766e"></i>VF AD y AIR 60</span><span><i style="background:#b7791f"></i>VF AIR 40</span><span><i style="background:#dfe3ea"></i>Sin comprometer</span></div>${chart(r.B)}
+ <div class="scroll"><table><tr><th>Bienio</th><th>Asig. AD+AIR 60</th><th>VF AD+AIR 60</th><th>Asig. AIR 40</th><th>VF AIR 40</th><th>Sin comprometer</th></tr>${rows}</table></div>
+ <h3>Recursos para otros proyectos</h3>
+ <div class="scroll"><table><tr><th>Fuente</th><th>2026 y saldos</th><th>Bienio 2027-28</th><th>Total</th></tr>
+ <tr><td>AD y AIR 60</td><td>${f(FX.A)}</td><td class="${r.oA<0?'neg':''}">${f(r.oA)}</td><td>${f(r.rA)}</td></tr>
+ <tr><td>AIR 40 (OCAD)</td><td>${f(FX.B)}</td><td class="${r.oB<0?'neg':''}">${f(r.oB)}</td><td>${f(r.rB)}</td></tr></table></div>
+ <h3>Fuentes y usos de la VF</h3>
+ <div class="scroll"><table><tr><th>Concepto</th><th>AD y AIR 60</th><th>AIR 40</th><th>Total</th></tr>
+ <tr><td>Fuentes (VF)</td><td>${f(r.vA)}</td><td>${f(r.vB)}</td><td>${f(r.vT)}</td></tr>
+ <tr><td>Usos identificados</td><td>${f(r.uA)}</td><td>${f(r.uB)}</td><td>${f(r.uA+r.uB)}</td></tr>
+ <tr><td>Tren multipropósito</td><td>${f(r.vA-r.uA)}</td><td>${f(r.vB-r.uB)}</td><td class="${r.tren<0?'neg':''}">${f(r.tren)}</td></tr></table></div>`}
+
+function desc(x){return `Inicio ${x.start} · AD/AIR 60: ${+(+x.p1).toFixed(1)}% y ${+(+x.p).toFixed(1)}% · AIR 40: ${+(+x.q1).toFixed(1)}% y ${+(+x.q).toFixed(1)}%`}
+function drawSlots(){
+ $('slots').innerHTML=['A','B'].map(k=>{const x=slots[k];
+  return x?`<div class="sc f"><b>${k} · ${x.n}</b><br>${desc(x.s)}<br>VF total: <b>${f(calc(x.s).vT)} MM</b> · guardada ${x.t}<div class="row" style="margin-top:8px"><button data-ld="${k}">Cargar</button><button data-rm="${k}">Borrar</button></div></div>`
+  :`<div class="sc">Espacio ${k} vacío. Ajuste los parámetros y use «Guardar en ${k}».</div>`}).join('');
+ if(!slots.A||!slots.B){$('cmp').innerHTML='<p class="note">Guarde dos proyecciones para ver la comparativa.</p>';return}
+ const a=calc(slots.A.s),b=calc(slots.B.s);
+ const row=(l,x,y)=>`<tr><td>${l}</td><td>${f(x)}</td><td>${f(y)}</td><td class="${y-x<0?'neg':''}">${y-x>0?'+':''}${f(y-x)}</td></tr>`;
+ $('cmp').innerHTML=`<h3>Comparativa A vs. B</h3><div class="scroll"><table><tr><th>Indicador (MM)</th><th>A · ${slots.A.n}</th><th>B · ${slots.B.n}</th><th>B − A</th></tr>${M.map(([l,k])=>row(l,a[k],b[k])).join('')}${a.B.map((o,i)=>row('VF total bienio '+o.yr,o.Av+o.Bv,b.B[i].Av+b.B[i].Bv)).join('')}</table></div>`}
+
+function save(k){slots[k]={n:$('nm').value.trim()||'Proyección '+k,s:clone(s),t:new Date().toLocaleDateString('es-CO')};st.set('vf_slots',JSON.stringify(slots));drawSlots()}
+function all(){renderCtl();renderUsos();draw()}
+
+$('ctl').addEventListener('input',e=>{const t=e.target,k=t.dataset.k;if(!k)return;
+ let v=Math.min(+t.dataset.mx,Math.max(0,+t.value||0));s[k]=v;
+ t.closest('.r').querySelectorAll('input').forEach(i=>{if(i!==t)i.value=+v.toFixed(2)});draw()});
+$('st').addEventListener('change',e=>{s.start=+e.target.value;renderCtl();draw()});
+$('us').addEventListener('input',e=>{const t=e.target,i=t.dataset.i;if(i==null)return;const a=t.dataset.a;s.usos[i][a]=a=='v'?(+t.value||0)*1e9:t.value;draw()});
+$('us').addEventListener('click',e=>{const i=e.target.dataset.del;if(i==null)return;s.usos.splice(i,1);renderUsos();draw()});
+$('addu').onclick=()=>{s.usos.push({n:'Nuevo uso',f:'A',v:0});renderUsos();draw()};
+document.querySelector('aside').addEventListener('click',e=>{const p=e.target.dataset.pre;if(!p)return;
+ const u=s.usos;s=Object.assign(clone(BASE),{usos:u});
+ if(p=='max')Object.assign(s,{p1:60,p:50,q1:36,q:36});
+ if(p=='seg')s.start=2029;all()});
+$('sA').onclick=()=>save('A');$('sB').onclick=()=>save('B');
+$('slots').addEventListener('click',e=>{const l=e.target.dataset.ld,r=e.target.dataset.rm;
+ if(l){s=clone(slots[l].s);all()}
+ if(r){slots[r]=null;st.set('vf_slots',JSON.stringify(slots));drawSlots()}});
+all();drawSlots();
+</script>
+</body>
+</html>
