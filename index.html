@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Simulador de vigencias futuras · SGR</title>
+<title>Proyección de Vigencias Futuras · bienios 2027-2036</title>
 <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{--ink:#14213d;--mut:#5b6577;--bg:#f4f5f8;--card:#fff;--line:#d9dde5;--teal:#0f766e;--ochre:#b7791f;--red:#b42318;--green:#177245}
@@ -41,13 +41,13 @@ svg{width:100%;height:auto}svg text{font-size:12px;fill:var(--mut)}
 .slots{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:700px){.slots{grid-template-columns:1fr}}
 .sc{border:1px dashed var(--line);border-radius:8px;padding:12px;font-size:13px}.sc.f{border-style:solid}
 .note{font-size:12px;color:var(--mut)}
-#us td input[type=text]{width:100%;min-width:150px}#us td input[type=number]{width:84px}#us td select{max-width:112px}.sub td{font-weight:600;background:#f4f5f8}.ind td:first-child{padding-left:22px}
+#us{table-layout:fixed}#us th,#us td{padding:6px 3px}#us th:nth-child(2){width:112px}#us th:nth-child(3){width:78px}#us th:nth-child(4){width:34px}#us input,#us select{width:100%;min-width:0}#us td button{padding:4px 0;width:100%}#us th:nth-child(2),#us th:nth-child(3),#us td:nth-child(2),#us td:nth-child(3){text-align:left}.sub td{font-weight:600;background:#f4f5f8}.ind td:first-child{padding-left:22px}
 </style>
 </head>
 <body>
 <header>
-<h1>Simulador de vigencias futuras · bienios 2027-2036</h1>
-<p>Cifras en miles de millones de pesos (MM). Mueva los porcentajes y vea cuánto queda para otros proyectos.</p>
+<h1>Proyección de Vigencias Futuras · bienios 2027-2036</h1>
+<p>Cifras en miles de millones de pesos</p>
 </header>
 <main>
 <aside class="col">
