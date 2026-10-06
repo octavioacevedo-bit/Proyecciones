@@ -11,7 +11,7 @@
 body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 "Public Sans",system-ui,sans-serif}
 header{background:var(--ink);color:#fff;padding:22px 28px}
 header h1{margin:0;font-size:22px}header p{margin:4px 0 0;color:#b9c3d9;font-size:13px}
-main{display:grid;grid-template-columns:330px 1fr;gap:20px;padding:20px 28px;max-width:1280px;margin:auto}
+main{display:grid;grid-template-columns:410px 1fr;gap:20px;padding:20px 28px;max-width:1280px;margin:auto}
 @media(max-width:900px){main{grid-template-columns:1fr;padding:14px}}
 section,aside{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px}
 h2{font-size:16px;margin:0 0 10px}h3{font-size:14px;margin:14px 0 6px}
@@ -41,7 +41,7 @@ svg{width:100%;height:auto}svg text{font-size:12px;fill:var(--mut)}
 .slots{display:grid;grid-template-columns:1fr 1fr;gap:12px}@media(max-width:700px){.slots{grid-template-columns:1fr}}
 .sc{border:1px dashed var(--line);border-radius:8px;padding:12px;font-size:13px}.sc.f{border-style:solid}
 .note{font-size:12px;color:var(--mut)}
-#us td input[type=text]{width:100%}#us td input[type=number]{width:90px}
+#us td input[type=text]{width:100%;min-width:150px}#us td input[type=number]{width:84px}#us td select{max-width:112px}.sub td{font-weight:600;background:#f4f5f8}.ind td:first-child{padding-left:22px}
 </style>
 </head>
 <body>
@@ -92,6 +92,7 @@ const BASE={start:2027,p1:25,p:50,q1:100/6,q:36,usos:[{n:'Escenarios deportivos'
 const SL=[['p1','AD y AIR 60 · bienio 2027-2028',60],['p','AD y AIR 60 · demás bienios',50],['q1','AIR 40 (OCAD) · bienio 2027-2028',36],['q','AIR 40 (OCAD) · demás bienios',36]];
 const M=[['VF AD y AIR 60','vA'],['VF AIR 40','vB'],['VF total','vT'],['Otros proyectos 2027-28 · AD y AIR 60','oA'],['Otros proyectos 2027-28 · AIR 40','oB'],['Recursos AD y AIR 60 (con 2026)','rA'],['Recursos AIR 40 (con saldos)','rB'],['Disponible Tren multipropósito','tren']];
 const $=i=>document.getElementById(i),clone=o=>JSON.parse(JSON.stringify(o));
+const esc=t=>String(t).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 const f=v=>(v/1e9).toLocaleString('es-CO',{minimumFractionDigits:1,maximumFractionDigits:1});
 const mem={},st={get:k=>{try{return localStorage.getItem(k)}catch(e){return mem[k]||null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){mem[k]=v}}};
 let s=clone(BASE),slots={A:null,B:null};
@@ -103,9 +104,9 @@ function calc(s){
   const o={yr:Y[2*b]+'-'+Y[2*b+1],on:b>=si&&b<si+4};
   for(const [k,a1,a2] of [['ad',s.p1,s.p],['a60',s.p1,s.p],['a40',s.q1,s.q]]){
    const a=D[k][2*b]+D[k][2*b+1];o[k]=a;o[k+'v']=o.on?a*(b==0?a1:a2)/100:0}
-  o.A=o.ad+o.a60;o.Av=o.adv+o.a60v;o.Bv=o.a40v;B.push(o)}
- const r={B,vA:0,vB:0,uA:0,uB:0};
- B.forEach(o=>{r.vA+=o.Av;r.vB+=o.Bv});
+  o.A=o.ad+o.a60;o.Av=o.adv+o.a60v;o.Bv=o.a40v;o.Amax=o.on?o.A*(b==0?.6:.5):0;o.Bmax=o.on?o.a40*.36:0;B.push(o)}
+ const r={B,vA:0,vB:0,uA:0,uB:0,mA:0,mB:0};
+ B.forEach(o=>{r.vA+=o.Av;r.vB+=o.Bv;r.mA+=o.Amax;r.mB+=o.Bmax});
  r.vT=r.vA+r.vB;
  r.oA=.6*B[0].A-B[0].Av;r.oB=.24*B[0].a40-B[0].Bv;
  r.rA=FX.A+r.oA;r.rB=FX.B+r.oB;
@@ -123,11 +124,11 @@ function renderUsos(){
  $('us').innerHTML='<tr><th>Uso</th><th>Fuente</th><th>MM</th><th></th></tr>'+s.usos.map((u,i)=>`<tr><td><input type="text" value="${u.n.replace(/"/g,'&quot;')}" data-i="${i}" data-a="n" aria-label="Nombre del uso"></td><td><select data-i="${i}" data-a="f" aria-label="Fuente"><option value="A" ${u.f=='A'?'selected':''}>AD y AIR 60</option><option value="B" ${u.f=='B'?'selected':''}>AIR 40</option></select></td><td><input type="number" step="0.1" min="0" value="${+(u.v/1e9).toFixed(3)}" data-i="${i}" data-a="v" aria-label="Valor en MM"></td><td><button data-del="${i}" aria-label="Quitar uso">✕</button></td></tr>`).join('')}
 
 function chart(B){
- const W=600,H=210,m=24,bw=70,g=(W-5*bw)/6,mx=Math.max(...B.map(o=>o.A+o.a40));let t='';
+ const W=600,H=210,m=24,bw=70,g=(W-5*bw)/6,mx=Math.max(...B.map(o=>o.Amax+o.Bmax));let t='';
  B.forEach((o,i)=>{const x=g+i*(bw+g);let y=H-m;
-  for(const [v,c] of [[o.Av,'#0f766e'],[o.Bv,'#b7791f'],[o.A+o.a40-o.Av-o.Bv,'#dfe3ea']]){const h=v/mx*(H-m-12);y-=h;t+=`<rect x="${x}" y="${y}" width="${bw}" height="${h}" fill="${c}"/>`}
+  for(const [v,c] of [[o.Av,'#0f766e'],[o.Bv,'#b7791f'],[o.Amax+o.Bmax-o.Av-o.Bv,'#dfe3ea']]){const h=v/mx*(H-m-12);y-=h;t+=`<rect x="${x}" y="${y}" width="${bw}" height="${h}" fill="${c}"/>`}
   t+=`<text x="${x+bw/2}" y="${H-8}" text-anchor="middle">${o.yr}</text>`});
- return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Asignación por bienio y parte comprometida en vigencia futura">${t}</svg>`}
+ return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Vigencia futura usada y máxima por bienio">${t}</svg>`}
 
 function dl(v,b){const d=v-b;if(Math.abs(d)<5e6)return '<span class="d">igual a la base</span>';return `<span class="d ${d>0?'up':'dn'}">${d>0?'+':''}${f(d)} vs. base</span>`}
 
@@ -135,20 +136,22 @@ function draw(){
  const r=calc(s),b0=calc(BASE);let al='';
  if(r.oA<-1e6)al+=`<div class="al">La VF de AD y AIR 60 supera el máximo de aprobación del bienio 2027-2028 en ${f(-r.oA)} MM.</div>`;
  if(r.oB<-1e6)al+=`<div class="al">La VF de AIR 40 supera el 24% de aprobación máxima del bienio 2027-2028 en ${f(-r.oB)} MM; no queda nada para otros proyectos.</div>`;
- if(r.tren<0)al+=`<div class="al">Los usos identificados superan las fuentes de VF en ${f(-r.tren)} MM.</div>`;
+ if(r.tren<0)al+=`<div class="al">Los usos de Indeportes superan las fuentes de VF en ${f(-r.tren)} MM.</div>`;
  const kp=[['Vigencia futura total','vT'],['Otros proyectos 2027-28 · AD y AIR 60','oA'],['Otros proyectos 2027-28 · AIR 40','oB'],['Disponible Tren multipropósito','tren']];
- const rows=r.B.map(o=>`<tr><td>${o.yr}</td><td>${f(o.A)}</td><td>${o.on?f(o.Av):'—'}</td><td>${f(o.a40)}</td><td>${o.on?f(o.Bv):'—'}</td><td>${f(o.A+o.a40-o.Av-o.Bv)}</td></tr>`).join('');
+ const c=(o,v)=>o.on?f(v):'—';
+ const rows=r.B.map(o=>`<tr><td>${o.yr}</td><td>${c(o,o.Amax)}</td><td>${c(o,o.Av)}</td><td>${c(o,o.Bmax)}</td><td>${c(o,o.Bv)}</td></tr>`).join('')+`<tr class="sub"><td>Total</td><td>${f(r.mA)}</td><td>${f(r.vA)}</td><td>${f(r.mB)}</td><td>${f(r.vB)}</td></tr>`;
  $('out').innerHTML=`<div class="kpis">${kp.map(([l,k])=>`<div class="k"><span>${l}</span><b class="${r[k]<0?'neg':''}">${f(r[k])}</b>${dl(r[k],b0[k])}</div>`).join('')}</div>${al}
- <h3>VF por bienio</h3><div class="lg"><span><i style="background:#0f766e"></i>VF AD y AIR 60</span><span><i style="background:#b7791f"></i>VF AIR 40</span><span><i style="background:#dfe3ea"></i>Sin comprometer</span></div>${chart(r.B)}
- <div class="scroll"><table><tr><th>Bienio</th><th>Asig. AD+AIR 60</th><th>VF AD+AIR 60</th><th>Asig. AIR 40</th><th>VF AIR 40</th><th>Sin comprometer</th></tr>${rows}</table></div>
- <h3>Recursos para otros proyectos</h3>
+ <h3>VF por bienio</h3><div class="lg"><span><i style="background:#0f766e"></i>VF AD y AIR 60</span><span><i style="background:#b7791f"></i>VF AIR 40</span><span><i style="background:#dfe3ea"></i>VF máx. sin usar</span></div>${chart(r.B)}
+ <div class="scroll"><table><tr><th>Bienio</th><th>VF Max AD+AIR60</th><th>VF Usada AD+AIR 60</th><th>VF Max AIR 40</th><th>VF Usada AIR 40</th></tr>${rows}</table></div>
+ <h3>Saldos de 2026-2027 para otros proyectos</h3>
  <div class="scroll"><table><tr><th>Fuente</th><th>2026 y saldos</th><th>Bienio 2027-28</th><th>Total</th></tr>
  <tr><td>AD y AIR 60</td><td>${f(FX.A)}</td><td class="${r.oA<0?'neg':''}">${f(r.oA)}</td><td>${f(r.rA)}</td></tr>
  <tr><td>AIR 40 (OCAD)</td><td>${f(FX.B)}</td><td class="${r.oB<0?'neg':''}">${f(r.oB)}</td><td>${f(r.rB)}</td></tr></table></div>
  <h3>Fuentes y usos de la VF</h3>
  <div class="scroll"><table><tr><th>Concepto</th><th>AD y AIR 60</th><th>AIR 40</th><th>Total</th></tr>
  <tr><td>Fuentes (VF)</td><td>${f(r.vA)}</td><td>${f(r.vB)}</td><td>${f(r.vT)}</td></tr>
- <tr><td>Usos identificados</td><td>${f(r.uA)}</td><td>${f(r.uB)}</td><td>${f(r.uA+r.uB)}</td></tr>
+ <tr class="sub"><td>Indeportes</td><td>${f(r.uA)}</td><td>${f(r.uB)}</td><td>${f(r.uA+r.uB)}</td></tr>
+ ${s.usos.map(u=>`<tr class="ind"><td>${esc(u.n)}</td><td>${u.f=='A'?f(u.v):'—'}</td><td>${u.f=='B'?f(u.v):'—'}</td><td>${f(u.v)}</td></tr>`).join('')}
  <tr><td>Tren multipropósito</td><td>${f(r.vA-r.uA)}</td><td>${f(r.vB-r.uB)}</td><td class="${r.tren<0?'neg':''}">${f(r.tren)}</td></tr></table></div>`}
 
 function desc(x){return `Inicio ${x.start} · AD/AIR 60: ${+(+x.p1).toFixed(1)}% y ${+(+x.p).toFixed(1)}% · AIR 40: ${+(+x.q1).toFixed(1)}% y ${+(+x.q).toFixed(1)}%`}
